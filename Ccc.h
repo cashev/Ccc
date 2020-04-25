@@ -54,6 +54,7 @@ typedef enum {
   ND_NE,  // !=
   ND_LT,  // <
   ND_LE,  // <=
+  ND_RETURN, // "return"
   ND_NUM, // 整数
 } NodeKind;
 
@@ -65,9 +66,15 @@ struct Node {
   Node *lhs; // 左辺
   Node *rhs; // 右辺
   int val; // kindがND_NUMの場合のみ使う
+  int offset; // kindがND_LVARの場合のみ使う
 };
 
+Node *code[100];
+
+void program();
+Node *stmt();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();

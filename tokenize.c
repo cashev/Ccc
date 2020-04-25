@@ -76,6 +76,13 @@ bool startwith(char *p, char*q) {
   return memcmp(p, q, strlen(q)) == 0;
 }
 
+int is_alnum(char c) {
+  return ('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') ||
+         (c == '_');
+}
+
 // 入力プログラム`user_input`をトークナイズしてそれを返す
 Token *tokenize() {
   char *p = user_input;
@@ -90,6 +97,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (startwith(p, "return") && !is_alnum(p[6])) {
+      cur = new_token(TK_RESERVED, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if (startwith(p, "==") ||
       startwith(p, "!=") ||
       startwith(p, "<=") ||
@@ -99,7 +112,7 @@ Token *tokenize() {
         continue;
       }
 
-    if (strchr("+-*/()<>", *p)) {
+    if (ispunct(*p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }

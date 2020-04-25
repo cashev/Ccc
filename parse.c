@@ -15,10 +15,41 @@ Node *new_node_num(int val) {
   return node;
 }
 
+// program = stmt*
+void program() {
+  int i = 0;
+  while (!at_eof())
+    code[i++] = stmt();
+  code[i] = NULL;
+}
+
+// stmt = expr ";" | "return" expr ";"
+Node *stmt() {
+  Node *node;
+
+  if (consume("return")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
+
+  expect(";");
+  return node;
+}
+
+// expr = assign
 Node *expr() {
+  return assign();
+}
+
+// assign = equality
+Node *assign() {
   return equality();
 }
 
+// equality = relational ("==" relational | "!=" relational)*
 Node *equality() {
   Node *node = relational();
 
@@ -32,6 +63,7 @@ Node *equality() {
   }
 }
 
+// relational = add ("<" add | "<=" add | ">=" add)*
 Node *relational() {
   Node *node = add();
 
@@ -49,6 +81,7 @@ Node *relational() {
   }
 }
 
+// add = mul ("+" mul | "-" mul)*
 Node *add() {
   Node *node = mul();
 
@@ -62,6 +95,7 @@ Node *add() {
   }
 }
 
+// mul = unary ("*" unary | "/" unary)*
 Node *mul() {
   Node *node = unary();
 
@@ -75,6 +109,7 @@ Node *mul() {
   }
 }
 
+// unary = ("+" | "-")? primay
 Node *unary() {
   if (consume("+"))
     return primary();
@@ -83,6 +118,7 @@ Node *unary() {
   return primary();
 }
 
+// primary = num | "(" expr ")"
 Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
   if (consume("(")) {
