@@ -52,4 +52,7 @@ assert 3 '1; 2; return 3;'
 assert 1 'a = 1; return a;'
 assert 14 'a = 3; z = 5 * 6 - 8; return a + z / 2;'
 
+assert 6 'foo = 1; bar = 2 + 3; return foo + bar;'
+assert 8 'foo123 = 3; bar = 5; return foo123 + bar;'
+
 echo OK
