@@ -38,6 +38,16 @@ bool consume(char *op) {
   return true;
 }
 
+// 次のトークンが識別子のときには、トークンを1つ読み進めて
+// 識別子のトークンを返す。それ以外の場合にはNULLを返す
+Token *consume_ident() {
+  if (token->kind != TK_IDENT)
+    return NULL;
+  Token *t = token;
+  token = token->next;
+  return t;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
@@ -114,6 +124,11 @@ Token *tokenize() {
 
     if (ispunct(*p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
+      continue;
+    }
+    
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
       continue;
     }
 

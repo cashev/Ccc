@@ -49,4 +49,7 @@ assert 1 'return 1; 2; 3;'
 assert 2 '1; return 2; 3;'
 assert 3 '1; 2; return 3;'
 
+assert 1 'a = 1; return a;'
+assert 14 'a = 3; z = 5 * 6 - 8; return a + z / 2;'
+
 echo OK
