@@ -35,16 +35,16 @@ extern Token *token;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
-bool consume(char *op);
-Token *consume_ident();
-void expect(char *op);
-int expect_number();
-bool at_eof();
 Token *tokenize();
 
 //
 // parse.c
 //
+
+bool consume(char *op);
+Token *consume_ident();
+void expect(char *op);
+int expect_number();
 
 typedef struct LVar LVar;
 
