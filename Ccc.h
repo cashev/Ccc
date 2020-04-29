@@ -41,11 +41,6 @@ Token *tokenize();
 // parse.c
 //
 
-bool consume(char *op);
-Token *consume_ident();
-void expect(char *op);
-int expect_number();
-
 typedef struct LVar LVar;
 
 // ローカル変数の型
