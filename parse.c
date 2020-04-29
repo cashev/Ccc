@@ -8,6 +8,51 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
+// 次のトークンが期待している記号のときには、トークンを1つ読み進めて
+// 真を返す。それ以外の場合には偽を返す。
+bool consume(char *op) {
+  if (token->kind != TK_RESERVED ||
+      strlen(op) != token->len ||
+      memcmp(token->str, op, token->len))
+    return false;
+  token = token->next;
+  return true;
+}
+
+// 次のトークンが識別子のときには、トークンを1つ読み進めて
+// 識別子のトークンを返す。それ以外の場合にはNULLを返す
+Token *consume_ident() {
+  if (token->kind != TK_IDENT)
+    return NULL;
+  Token *t = token;
+  token = token->next;
+  return t;
+}
+
+// 次のトークンが期待している記号のときには、トークンを1つ読み進める。
+// それ以外の場合にはエラーを報告する。
+void expect(char *op) {
+  if (token->kind != TK_RESERVED || 
+      strlen(op) != token->len ||
+      memcmp(token->str, op, token->len))
+    error_at(token->str, "'%c'ではありません", op);
+  token = token->next;
+}
+
+// 次のトークンが数値の場合、トークンを1つ読み進めてその数値を返す。
+// それ以外の場合にはエラーを報告する。
+int expect_number() {
+  if (token->kind != TK_NUM)
+    error_at(token->str, "数ではありません");
+  int val = token->val;
+  token = token->next;
+  return val;
+}
+
+bool at_eof() {
+  return token->kind == TK_EOF;
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
