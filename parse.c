@@ -86,30 +86,29 @@ void program() {
 //      | "return" expr ";"
 //      | "if" "(" expr ")" stmt ( "else" stmt)?
 Node *stmt() {
-  Node *node;
-
   if (consume("return")) {
-    node = calloc(1, sizeof(Node));
+    Node *node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
-  } else if (consume("if")) {
-    node = calloc(1, sizeof(Node));
+
+    expect(";");
+    return node;
+  }
+  
+  if (consume("if")) {
+    Node *node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
     consume("(");
-    node->lhs = expr();
+    node->cond = expr();
     consume(")");
-    Node *n = calloc(1, sizeof(Node));
-    n->lhs = stmt();
-    n->rhs = NULL;
+    node->then = stmt();
     if (consume("else")) {
-      n->rhs = stmt();
+      node->els = stmt();
     }
-    node->rhs = n;
     return node;
-  } else {
-    node = expr();
   }
 
+  Node *node = expr();
   expect(";");
   return node;
 }
