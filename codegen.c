@@ -60,6 +60,18 @@ void gen(Node *node) {
     }
     return;
   }
+  case ND_WHILE: {
+    int counter = labelCounter++;
+    printf(".Lbegin%d:\n", counter);
+    gen(node->cond);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%d\n", counter);
+    gen(node->then);
+    printf("  jmp .Lbegin%d\n", counter);
+    printf(".Lend%d:\n", counter);
+    return;
+  }
   }
 
   gen(node->lhs);
