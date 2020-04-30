@@ -96,7 +96,7 @@ Node *stmt() {
     expect(";");
     return node;
   }
-  
+
   if (consume("if")) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_IF;

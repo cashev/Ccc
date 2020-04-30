@@ -78,9 +78,9 @@ typedef struct Node Node;
 // 抽象構文木のノードの型
 struct Node {
   NodeKind kind; // ノードの型
-  
-  Node *lhs;     // 左辺
-  Node *rhs;     // 右辺
+
+  Node *lhs; // 左辺
+  Node *rhs; // 右辺
 
   // "if", "for"
   Node *cond;
@@ -89,8 +89,8 @@ struct Node {
   Node *init;
   Node *inc;
 
-  int val;       // kindがND_NUMの場合のみ使う
-  int offset;    // kindがND_LVARの場合のみ使う
+  int val;    // kindがND_NUMの場合のみ使う
+  int offset; // kindがND_LVARの場合のみ使う
 };
 
 Node *code[100];
