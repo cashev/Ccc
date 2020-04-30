@@ -83,6 +83,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (startwith(p, "for") && !is_alnum(p[3])) {
+      cur = new_token(TK_RESERVED, cur, p, 3);
+      p += 3;
+      continue;
+    }
+
     if (startwith(p, "==") || startwith(p, "!=") || startwith(p, "<=") ||
         startwith(p, ">=")) {
       cur = new_token(TK_RESERVED, cur, p, 2);

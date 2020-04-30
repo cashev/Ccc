@@ -86,6 +86,7 @@ void program() {
 //      | "return" expr ";"
 //      | "if" "(" expr ")" stmt ( "else" stmt)?
 //      | "while" "(" expr ")" stmt
+//      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 Node *stmt() {
   if (consume("return")) {
     Node *node = calloc(1, sizeof(Node));
@@ -115,6 +116,35 @@ Node *stmt() {
     consume("(");
     node->cond = expr();
     consume(")");
+    node->then = stmt();
+    return node;
+  }
+
+  if (consume("for")) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    consume("(");
+    if (consume(";")) {
+
+    } else {
+      node->init = expr();
+      consume(";");
+    }
+
+    if (consume(";")) {
+
+    } else {
+      node->cond = expr();
+      consume(";");
+    }
+
+    if (consume(")")) {
+
+    } else {
+      node->inc = expr();
+      consume(")");
+    }
+
     node->then = stmt();
     return node;
   }
