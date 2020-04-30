@@ -85,15 +85,6 @@ struct Node {
 Node *code[100];
 
 void program();
-Node *stmt();
-Node *expr();
-Node *assign();
-Node *equality();
-Node *relational();
-Node *add();
-Node *mul();
-Node *unary();
-Node *primary();
 
 //
 // codegen.c

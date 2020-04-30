@@ -64,6 +64,16 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Node *stmt();
+Node *expr();
+Node *assign();
+Node *equality();
+Node *relational();
+Node *add();
+Node *mul();
+Node *unary();
+Node *primary();
+
 // program = stmt*
 void program() {
   int i = 0;
