@@ -76,7 +76,9 @@ void program() {
   code[i] = NULL;
 }
 
-// stmt = expr ";" | "return" expr ";"
+// stmt = expr ";" 
+//      | "return" expr ";"
+//      | "if" "(" expr ")" stmt ( "else" stmt)?
 Node *stmt() {
   Node *node;
 
@@ -84,6 +86,20 @@ Node *stmt() {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+  } else if (consume("if")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    consume("(");
+    node->lhs = expr();
+    consume(")");
+    Node *n = calloc(1, sizeof(Node));
+    n->lhs = stmt();
+    n->rhs = NULL;
+    if (consume("else")) {
+      n->rhs = stmt();
+    }
+    node->rhs = n;
+    return node;
   } else {
     node = expr();
   }
