@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   // 変数26個分の領域を確保する
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, %d\n", offset);
+  printf("  sub rsp, %d\n", offset + 8);
 
   // 先頭の式から順にコード生成
   for (int i = 0; code[i]; i++) {
