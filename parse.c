@@ -11,8 +11,7 @@ LVar *find_lvar(Token *tok) {
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char *op) {
-  if (token->kind != TK_RESERVED ||
-      strlen(op) != token->len ||
+  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len))
     return false;
   token = token->next;
@@ -32,8 +31,7 @@ Token *consume_ident() {
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
-  if (token->kind != TK_RESERVED || 
-      strlen(op) != token->len ||
+  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len))
     error_at(token->str, "'%c'ではありません", op);
   token = token->next;
@@ -49,9 +47,7 @@ int expect_number() {
   return val;
 }
 
-bool at_eof() {
-  return token->kind == TK_EOF;
-}
+bool at_eof() { return token->kind == TK_EOF; }
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
@@ -76,7 +72,7 @@ void program() {
   code[i] = NULL;
 }
 
-// stmt = expr ";" 
+// stmt = expr ";"
 //      | "return" expr ";"
 //      | "if" "(" expr ")" stmt ( "else" stmt)?
 Node *stmt() {
@@ -109,9 +105,7 @@ Node *stmt() {
 }
 
 // expr = assign
-Node *expr() {
-  return assign();
-}
+Node *expr() { return assign(); }
 
 // assign = equality ("=" assign)?
 Node *assign() {
@@ -131,7 +125,7 @@ Node *equality() {
     else if (consume("!="))
       node = new_node(ND_NE, node, relational());
     else
-     return node;
+      return node;
   }
 }
 
