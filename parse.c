@@ -124,23 +124,15 @@ Node *stmt() {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_FOR;
     consume("(");
-    if (consume(";")) {
-
-    } else {
+    if (!consume(";")) {
       node->init = expr();
       consume(";");
     }
-
-    if (consume(";")) {
-
-    } else {
+    if (!consume(";")) {
       node->cond = expr();
       consume(";");
     }
-
-    if (consume(")")) {
-
-    } else {
+    if (!consume(")")) {
       node->inc = expr();
       consume(")");
     }
