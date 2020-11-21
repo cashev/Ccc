@@ -39,16 +39,6 @@ int is_alpha(char c) {
 
 int is_alnum(char c) { return is_alpha(c) || ('0' <= c && c <= '9'); }
 
-// 新しいトークンを作成してcurに繋げる
-Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
-  Token *tok = calloc(1, sizeof(Token));
-  tok->kind = kind;
-  tok->str = str;
-  tok->len = len;
-  cur->next = tok;
-  return tok;
-}
-
 int read_punct(char *p) {
   if (startwith(p, "==") || startwith(p, "!=") ||
       startwith(p, "<=") || startwith(p, ">="))
@@ -72,6 +62,15 @@ void convert_keywords(Token *tok) {
       t->kind = TK_RESERVED;
 }
 
+// 新しいTokenを作成する
+Token *new_token(TokenKind kind, char *start, char *end) {
+  Token *tok = calloc(1, sizeof(Token));
+  tok->kind = kind;
+  tok->str = start;
+  tok->len = end - start;
+  return tok;
+}
+
 // 入力文字列をトークナイズしてTokenを返す
 Token *tokenize(char *p) {
   Token head;
@@ -85,16 +84,21 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    // Identifier or keyword
     if (is_alpha(*p)) {
-      char *q = p++;
-      while (is_alnum(*p))
+      char *start = p;
+      do {
         p++;
-      cur = new_token(TK_IDENT, cur, q, p - q);
+      } while (is_alnum(*p));
+      cur->next = new_token(TK_IDENT, start, p);
+      cur = cur->next;
       continue;
     }
 
+    // Numeric literal
     if (isdigit(*p)) {
-      cur = new_token(TK_NUM, cur, p, 0);
+      cur->next = new_token(TK_NUM, p, p);
+      cur = cur->next;
       char *q = p;
       cur->val = strtol(p, &p, 10);
       cur->len = p - q;
@@ -104,7 +108,8 @@ Token *tokenize(char *p) {
     // Punctuator (区切字)
     int punct_len = read_punct(p);
     if (punct_len) {
-      cur = new_token(TK_RESERVED, cur, p, punct_len);
+      cur->next = new_token(TK_RESERVED, p, p + punct_len);
+      cur = cur->next;
       p += cur->len;
       continue;
     }
@@ -112,7 +117,7 @@ Token *tokenize(char *p) {
     error_at(p, "トークナイズできません");
   }
 
-  new_token(TK_EOF, cur, p, 0);
+  cur->next = new_token(TK_EOF, p, p);
   convert_keywords(head.next);
   return head.next;
 }
