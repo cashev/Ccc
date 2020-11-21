@@ -40,10 +40,10 @@ int is_alpha(char c) {
 int is_alnum(char c) { return is_alpha(c) || ('0' <= c && c <= '9'); }
 
 int read_punct(char *p) {
-  if (startwith(p, "==") || startwith(p, "!=") ||
-      startwith(p, "<=") || startwith(p, ">="))
+  if (startwith(p, "==") || startwith(p, "!=") || startwith(p, "<=") ||
+      startwith(p, ">="))
     return 2;
-  
+
   return ispunct(*p) ? 1 : 0;
 }
 
