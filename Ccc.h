@@ -27,15 +27,12 @@ struct Token {
   int len;        // トークンの長さ
 };
 
-// 入力プログラム
-extern char *user_input;
-
 // 現在着目しているトークン
 extern Token *token;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
-Token *tokenize();
+Token *tokenize(char *p);
 
 //
 // parse.c

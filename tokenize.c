@@ -45,9 +45,8 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
-// 入力プログラム`user_input`をトークナイズしてそれを返す
-Token *tokenize() {
-  char *p = user_input;
+// 入力文字列をトークナイズしてTokenを返す
+Token *tokenize(char *p) {
   Token head;
   head.next = NULL;
   Token *cur = &head;
