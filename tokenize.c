@@ -27,6 +27,10 @@ void error_at(char *loc, char *fmt, ...) {
   exit(1);
 }
 
+bool equal(Token *tok, char *op) {
+  return memcmp(tok->str, op, tok->len) == 0 && op[tok->len] == '\0';
+}
+
 bool startwith(char *p, char *q) { return memcmp(p, q, strlen(q)) == 0; }
 
 int is_alpha(char c) {
@@ -45,6 +49,21 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
+bool is_keyword(Token *tok) {
+  char *kw[] = {"return", "if", "else", "for", "while"};
+
+  for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
+    if (equal(tok, kw[i]))
+      return true;
+  return false;
+}
+
+void convert_keywords(Token *tok) {
+  for (Token *t = tok; t->kind != TK_EOF; t = t->next)
+    if (is_keyword(t))
+      t->kind = TK_RESERVED;
+}
+
 // 入力文字列をトークナイズしてTokenを返す
 Token *tokenize(char *p) {
   Token head;
@@ -55,36 +74,6 @@ Token *tokenize(char *p) {
     // 空白文字をスキップ
     if (isspace(*p)) {
       p++;
-      continue;
-    }
-
-    if (startwith(p, "return") && !is_alnum(p[6])) {
-      cur = new_token(TK_RESERVED, cur, p, 6);
-      p += 6;
-      continue;
-    }
-
-    if (startwith(p, "if") && !is_alnum(p[2])) {
-      cur = new_token(TK_RESERVED, cur, p, 2);
-      p += 2;
-      continue;
-    }
-
-    if (startwith(p, "else") && !is_alnum(p[4])) {
-      cur = new_token(TK_RESERVED, cur, p, 4);
-      p += 4;
-      continue;
-    }
-
-    if (startwith(p, "while") && !is_alnum(p[5])) {
-      cur = new_token(TK_RESERVED, cur, p, 5);
-      p += 5;
-      continue;
-    }
-
-    if (startwith(p, "for") && !is_alnum(p[3])) {
-      cur = new_token(TK_RESERVED, cur, p, 3);
-      p += 3;
       continue;
     }
 
@@ -120,5 +109,6 @@ Token *tokenize(char *p) {
   }
 
   new_token(TK_EOF, cur, p, 0);
+  convert_keywords(head.next);
   return head.next;
 }
