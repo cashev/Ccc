@@ -101,4 +101,4 @@ void program();
 // codegen.c
 //
 
-void gen(Node *node);
+void codegen();
