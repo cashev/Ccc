@@ -49,6 +49,14 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
+int read_punct(char *p) {
+  if (startwith(p, "==") || startwith(p, "!=") ||
+      startwith(p, "<=") || startwith(p, ">="))
+    return 2;
+  
+  return ispunct(*p) ? 1 : 0;
+}
+
 bool is_keyword(Token *tok) {
   char *kw[] = {"return", "if", "else", "for", "while"};
 
@@ -77,18 +85,6 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (startwith(p, "==") || startwith(p, "!=") || startwith(p, "<=") ||
-        startwith(p, ">=")) {
-      cur = new_token(TK_RESERVED, cur, p, 2);
-      p += 2;
-      continue;
-    }
-
-    if (ispunct(*p)) {
-      cur = new_token(TK_RESERVED, cur, p++, 1);
-      continue;
-    }
-
     if (is_alpha(*p)) {
       char *q = p++;
       while (is_alnum(*p))
@@ -102,6 +98,14 @@ Token *tokenize(char *p) {
       char *q = p;
       cur->val = strtol(p, &p, 10);
       cur->len = p - q;
+      continue;
+    }
+
+    // Punctuator (区切字)
+    int punct_len = read_punct(p);
+    if (punct_len) {
+      cur = new_token(TK_RESERVED, cur, p, punct_len);
+      p += cur->len;
       continue;
     }
 
