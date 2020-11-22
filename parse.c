@@ -77,6 +77,21 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Node *new_var_node(LVar *var) {
+  Node *node = new_node(ND_LVAR);
+  node->var = var;
+  return node;
+}
+
+LVar *new_lvar(char *name) {
+  LVar *var = calloc(1, sizeof(LVar));
+  var->name = name;
+  var->next = locals;
+  locals = var;
+}
+
+
+
 Node *stmt();
 Node *compound_stmt();
 Node *expr();
@@ -296,14 +311,13 @@ Node *primary() {
 
     LVar *lvar = find_lvar(tok);
     if (lvar) {
-      node->offset = lvar->offset;
+      node->var = lvar;
     } else {
       lvar = calloc(1, sizeof(LVar));
       lvar->next = locals;
       lvar->name = tok->str;
       lvar->len = tok->len;
-      lvar->offset = locals ? locals->offset + 8 : 8;
-      node->offset = lvar->offset;
+      node->var = lvar;
       locals = lvar;
     }
     return node;

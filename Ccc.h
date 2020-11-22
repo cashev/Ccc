@@ -84,8 +84,8 @@ struct Node {
   // Block
   Node *body;
 
+  LVar *var;  // kindがND_LVARの場合のみ使う
   int val;    // kindがND_NUMの場合のみ使う
-  int offset; // kindがND_LVARの場合のみ使う
 };
 
 // Function

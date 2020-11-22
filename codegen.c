@@ -7,7 +7,7 @@ void gen_lval(Node *node) {
     error("代入の左辺値が変数ではありません");
 
   printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
+  printf("  sub rax, %d\n", node->var->offset);
   printf("  push rax\n");
 }
 
@@ -151,7 +151,7 @@ void assign_lvar_offsets(Function *prog) {
   int offset = 0;
   for (LVar *var = prog->locals; var; var = var->next) {
     offset += 8;
-    var->offset = -offset;
+    var->offset = offset;
   }
   prog->stack_size = align_to(offset, 16);
 }
