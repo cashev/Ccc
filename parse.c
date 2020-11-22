@@ -65,6 +65,7 @@ Node *new_node_num(int val) {
 }
 
 Node *stmt();
+Node *compound_stmt();
 Node *expr();
 Node *assign();
 Node *equality();
@@ -84,6 +85,7 @@ void program() {
 
 // stmt = expr ";"
 //      | "return" expr ";"
+//      | "{" compound-stmt
 //      | "if" "(" expr ")" stmt ( "else" stmt)?
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -95,6 +97,10 @@ Node *stmt() {
 
     expect(";");
     return node;
+  }
+
+  if (consume("{")) {
+    return compound_stmt();
   }
 
   if (consume("if")) {
@@ -144,6 +150,25 @@ Node *stmt() {
   Node *node = expr();
   expect(";");
   return node;
+}
+
+// compound-stmt = stmt* "}"
+Node *compound_stmt() {
+  Node head = {};
+  Node *cur = &head;
+  while (!consume("}")) {
+    cur->next = stmt();
+    cur = cur->next;
+  }
+
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_BLOCK;
+  node->body = head.next;
+  return node;
+}
+
+// expr-stmt = expr ";"
+Node *expr_stmt() {
 }
 
 // expr = assign

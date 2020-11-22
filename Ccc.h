@@ -62,6 +62,7 @@ typedef enum {
   ND_LT,     // <
   ND_LE,     // <=
   ND_RETURN, // "return"
+  ND_BLOCK,  // { ... }
   ND_IF,     // "if"
   ND_WHILE,  // "while"
   ND_FOR,    // "for"
@@ -76,6 +77,7 @@ typedef struct Node Node;
 struct Node {
   NodeKind kind; // ノードの型
 
+  Node *next; // 次のノード
   Node *lhs; // 左辺
   Node *rhs; // 右辺
 
@@ -85,6 +87,9 @@ struct Node {
   Node *els;
   Node *init;
   Node *inc;
+
+  // Block
+  Node *body;
 
   int val;    // kindがND_NUMの場合のみ使う
   int offset; // kindがND_LVARの場合のみ使う
