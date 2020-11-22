@@ -306,20 +306,12 @@ Node *primary() {
   // 識別子
   Token *tok = consume_ident();
   if (tok) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_LVAR;
-
     LVar *lvar = find_lvar(tok);
-    if (lvar) {
-      node->var = lvar;
-    } else {
-      lvar = calloc(1, sizeof(LVar));
-      lvar->next = locals;
-      lvar->name = tok->str;
+    if (!lvar) {
+      lvar = new_lvar(tok->str);
       lvar->len = tok->len;
-      node->var = lvar;
-      locals = lvar;
     }
+    Node *node = new_var_node(lvar);
     return node;
   }
 
