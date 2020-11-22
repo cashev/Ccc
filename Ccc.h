@@ -45,7 +45,6 @@ struct LVar {
   int offset; // RBPからのオフセット
 };
 
-
 // 抽象構文木のノードの種類
 typedef enum {
   ND_ADD,    // +
@@ -56,12 +55,12 @@ typedef enum {
   ND_NE,     // !=
   ND_LT,     // <
   ND_LE,     // <=
+  ND_ASSIGN, // =
   ND_RETURN, // "return"
-  ND_BLOCK,  // { ... }
   ND_IF,     // "if"
   ND_WHILE,  // "while"
   ND_FOR,    // "for"
-  ND_ASSIGN, // =
+  ND_BLOCK,  // { ... }
   ND_LVAR,   // ローカル変数
   ND_NUM,    // 整数
 } NodeKind;
@@ -72,8 +71,8 @@ struct Node {
   NodeKind kind; // ノードの型
 
   Node *next; // 次のノード
-  Node *lhs; // 左辺
-  Node *rhs; // 右辺
+  Node *lhs;  // 左辺
+  Node *rhs;  // 右辺
 
   // "if", "for"
   Node *cond;

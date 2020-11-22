@@ -16,10 +16,6 @@ void gen(Node *node) {
   case ND_NUM:
     printf("  push %d\n", node->val);
     return;
-  case ND_BLOCK:
-    for (Node *n = node->body; n; n = n->next)
-      gen(n);
-    return;
   case ND_LVAR:
     gen_lval(node);
     printf("  pop rax\n");
@@ -94,6 +90,10 @@ void gen(Node *node) {
     printf(".Lend%d:", counter);
     return;
   }
+  case ND_BLOCK:
+    for (Node *n = node->body; n; n = n->next)
+      gen(n);
+    return;
   }
 
   gen(node->lhs);
