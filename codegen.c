@@ -141,28 +141,37 @@ void gen(Node *node) {
   printf("  push rax\n");
 }
 
-void codegen() {
+// nを繰り上げ、alignの倍数で最も近い数を返す
+// align_to(5, 8) -> 8, align_to(11, 8)
+int align_to(int n, int align) {
+  return (n + align - 1) / align * align;
+}
+
+void assign_lvar_offsets(Function *prog) {
+  int offset = 0;
+  for (LVar *var = prog->locals; var; var = var->next) {
+    offset += 8;
+    var->offset = -offset;
+  }
+  prog->stack_size = align_to(offset, 16);
+}
+
+void codegen(Function *prog) {
+  assign_lvar_offsets(prog);
+
   // アセンブリの前半部分を出力
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
   printf("main:\n");
 
-  int offset = locals ? locals->offset : 0;
-
   // プロローグ
   // 変数26個分の領域を確保する
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, %d\n", offset + 8);
+  printf("  sub rsp, %d\n", prog->stack_size);
 
-  // 先頭の式から順にコード生成
-  for (int i = 0; code[i]; i++) {
-    gen(code[i]);
-
-    // 式の評価結果としてスタックに一つの値が残っている
-    // はずなので、スタックが溢れないようにポップしておく
-    printf("  pop rax\n");
-  }
+  // コード生成
+  gen(prog->body);
 
   // エピローグ
   // 最後の式の結果がRAXに残っているのでそれが返り値になる

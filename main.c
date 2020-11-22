@@ -7,11 +7,11 @@ int main(int argc, char **argv) {
   }
 
   // トークナイズしてパースする
-  // 結果はcodeに保存される
-  token = tokenize(argv[1]);
-  program();
+  Token *tok = tokenize(argv[1]);
+  Function *prog = parse(tok);
 
-  codegen();
+  // ASTからアセンブリを出力する
+  codegen(prog);
 
   return 0;
 }

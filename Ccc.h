@@ -17,8 +17,8 @@ typedef enum {
   TK_EOF,      // 入力の終わりを表すトークン
 } TokenKind;
 
+// Token
 typedef struct Token Token;
-
 struct Token {
   TokenKind kind; // トークンの型
   Token *next;    // 次の入力トークン
@@ -26,9 +26,6 @@ struct Token {
   char *str;      // トークン文字列
   int len;        // トークンの長さ
 };
-
-// 現在着目しているトークン
-extern Token *token;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
@@ -48,8 +45,6 @@ struct LVar {
   int offset; // RBPからのオフセット
 };
 
-// ローカル変数
-LVar *locals;
 
 // 抽象構文木のノードの種類
 typedef enum {
@@ -71,9 +66,8 @@ typedef enum {
   ND_NUM,    // 整数
 } NodeKind;
 
-typedef struct Node Node;
-
 // 抽象構文木のノードの型
+typedef struct Node Node;
 struct Node {
   NodeKind kind; // ノードの型
 
@@ -95,12 +89,18 @@ struct Node {
   int offset; // kindがND_LVARの場合のみ使う
 };
 
-Node *code[100];
+// Function
+typedef struct Function Function;
+struct Function {
+  Node *body;
+  LVar *locals;
+  int stack_size;
+};
 
-void program();
+Function *parse(Token *tok);
 
 //
 // codegen.c
 //
 
-void codegen();
+void codegen(Function *prog);

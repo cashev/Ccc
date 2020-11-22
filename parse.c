@@ -1,5 +1,8 @@
 #include "Ccc.h"
 
+LVar *locals;
+Token *token;
+
 // 変数を名前で検索する。見つからなかった場合はNULLを返す。
 LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next)
@@ -74,14 +77,6 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
-
-// program = stmt*
-void program() {
-  int i = 0;
-  while (!at_eof())
-    code[i++] = stmt();
-  code[i] = NULL;
-}
 
 // stmt = expr ";"
 //      | "return" expr ";"
@@ -283,4 +278,14 @@ Node *primary() {
 
   // そうでなければ数値のはず
   return new_node_num(expect_number());
+}
+
+// program = stmt*
+Function *parse(Token *tok) {
+  token = tok;
+
+  Function *prog = calloc(1, sizeof(Function));
+  prog->body = stmt();
+  prog->locals = locals;
+  return prog;
 }
