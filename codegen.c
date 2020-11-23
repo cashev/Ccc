@@ -83,19 +83,19 @@ void gen_stmt(Node *node) {
       gen_expr(node->cond);
       printf("  pop %%rax\n");
       printf("  cmp $0, %%rax\n");
-      printf("  je .Lelse%d\n", counter);
+      printf("  je .L.else.%d\n", counter);
       gen_stmt(node->then);
-      printf("  jmp .Lend%d\n", counter);
-      printf(".Lelse%d:\n", counter);
+      printf("  jmp .L.end.%d\n", counter);
+      printf(".L.else.%d:\n", counter);
       gen_stmt(node->els);
-      printf(".Lend%d:\n", counter);
+      printf(".L.end.%d:\n", counter);
     } else {
       gen_expr(node->cond);
       printf("  pop %%rax\n");
       printf("  cmp $0, %%rax\n");
-      printf("  je .Lend%d\n", counter);
+      printf("  je .L.end.%d\n", counter);
       gen_stmt(node->then);
-      printf(".Lend%d:\n", counter);
+      printf(".L.end.%d:\n", counter);
     }
     return;
   }
@@ -103,30 +103,30 @@ void gen_stmt(Node *node) {
     int counter = labelCounter++;
     if (node->init)
       gen_stmt(node->init);
-    printf(".Lbegin%d:\n", counter);
+    printf(".L.begin.%d:\n", counter);
     if (node->cond) {
       gen_expr(node->cond);
       printf("  pop %%rax\n");
       printf("  cmp $0, %%rax\n");
-      printf("  je .Lend%d\n", counter);
+      printf("  je .L.end.%d\n", counter);
     }
     gen_stmt(node->then);
     if (node->inc)
       gen_expr(node->inc);
-    printf("  jmp .Lbegin%d\n", counter);
-    printf(".Lend%d:", counter);
+    printf("  jmp .L.begin.%d\n", counter);
+    printf(".L.end.%d:", counter);
     return;
   }
   case ND_WHILE: {
     int counter = labelCounter++;
-    printf(".Lbegin%d:\n", counter);
+    printf(".L.begin.%d:\n", counter);
     gen_expr(node->cond);
     printf("  pop %%rax\n");
     printf("  cmp $0, %%rax\n");
-    printf("  je .Lend%d\n", counter);
+    printf("  je .L.end.%d\n", counter);
     gen_stmt(node->then);
-    printf("  jmp .Lbegin%d\n", counter);
-    printf(".Lend%d:\n", counter);
+    printf("  jmp .L.begin.%d\n", counter);
+    printf(".L.end.%d:\n", counter);
     return;
   }
   case ND_BLOCK:
