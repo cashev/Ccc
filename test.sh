@@ -25,6 +25,8 @@ assert 15 '{ return 5*(9-6); }'
 assert 4 '{ return (3+5)/2; }'
 assert 1 '{ return +2-1; }'
 assert 10 '{ return -10+20; }'
+assert 10 '{ return - -10; }'
+assert 10 '{ return - - +10; }'
 
 assert 0 '{ return 0==1; }'
 assert 1 '{ return 42==42; }'
@@ -73,6 +75,6 @@ assert 55 '{ i=0; j=0; for (i=0; i<=10; i=i+1) j=i+j; return j; }'
 assert 3 '{ for (;;) return 3; return 5; }'
 
 assert 3 '{ {1; {2;} return 3;} }'
-assert 5 '{ ;;; return 5; }'
+# assert 5 '{ ;;; return 5; }'
 
 echo OK
