@@ -6,73 +6,73 @@ void gen_lval(Node *node) {
   if (node->kind != ND_LVAR)
     error("代入の左辺値が変数ではありません");
 
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->var->offset);
-  printf("  push rax\n");
+  printf("  mov %%rbp, %%rax\n");
+  printf("  sub $%d, %%rax\n", node->var->offset);
+  printf("  push %%rax\n");
 }
 
 void gen_expr(Node *node) {
   switch (node->kind) {
   case ND_NUM:
-    printf("  push %d\n", node->val);
+    printf("  push $%d\n", node->val);
     return;
   case ND_LVAR:
     gen_lval(node);
-    printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
-    printf("  push rax\n");
+    printf("  pop %%rax\n");
+    printf("  mov (%%rax), %%rax\n");
+    printf("  push %%rax\n");
     return;
   case ND_ASSIGN:
     gen_lval(node->lhs);
     gen_expr(node->rhs);
 
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-    printf("  mov [rax], rdi\n");
-    printf("  push rdi\n");
+    printf("  pop %%rdi\n");
+    printf("  pop %%rax\n");
+    printf("  mov %%rdi, (%%rax)\n");
+    printf("  push %%rdi\n");
     return;
   }
 
   gen_expr(node->lhs);
   gen_expr(node->rhs);
 
-  printf("  pop rdi\n");
-  printf("  pop rax\n");
+  printf("  pop %%rdi\n");
+  printf("  pop %%rax\n");
 
   switch (node->kind) {
   case ND_ADD:
-    printf("  add rax, rdi\n");
+    printf("  add %%rdi, %%rax\n");
     break;
   case ND_SUB:
-    printf("  sub rax, rdi\n");
+    printf("  sub %%rdi, %%rax\n");
     break;
   case ND_MUL:
-    printf("  imul rax, rdi\n");
+    printf("  imul %%rdi, %%rax\n");
     break;
   case ND_DIV:
     printf("  cqo\n");
-    printf("  idiv rdi\n");
+    printf("  idiv %%rdi\n");
     break;
   case ND_EQ:
   case ND_NE:
   case ND_LT:
   case ND_LE:
-    printf("  cmp rax, rdi\n");
+    printf("  cmp %%rdi, %%rax\n");
 
     if (node->kind == ND_EQ) {
-      printf("  sete al\n");
+      printf("  sete %%al\n");
     } else if (node->kind == ND_NE) {
-      printf("  setne al\n");
+      printf("  setne %%al\n");
     } else if (node->kind == ND_LT) {
-      printf("  setl al\n");
+      printf("  setl %%al\n");
     } else if (node->kind == ND_LE) {
-      printf("  setle al\n");
+      printf("  setle %%al\n");
     }
-    printf("  movzb rax, al\n");
+    printf("  movzb %%al, %%rax\n");
     break;
   }
 
-  printf("  push rax\n");
+  printf("  push %%rax\n");
 }
 
 void gen_stmt(Node *node) {
@@ -81,8 +81,8 @@ void gen_stmt(Node *node) {
     int counter = labelCounter++;
     if (node->els) {
       gen_expr(node->cond);
-      printf("  pop rax\n");
-      printf("  cmp rax, 0\n");
+      printf("  pop %%rax\n");
+      printf("  cmp $0, %%rax\n");
       printf("  je .Lelse%d\n", counter);
       gen_stmt(node->then);
       printf("  jmp .Lend%d\n", counter);
@@ -91,8 +91,8 @@ void gen_stmt(Node *node) {
       printf(".Lend%d:\n", counter);
     } else {
       gen_expr(node->cond);
-      printf("  pop rax\n");
-      printf("  cmp rax, 0\n");
+      printf("  pop %%rax\n");
+      printf("  cmp $0, %%rax\n");
       printf("  je .Lend%d\n", counter);
       gen_stmt(node->then);
       printf(".Lend%d:\n", counter);
@@ -106,8 +106,8 @@ void gen_stmt(Node *node) {
     printf(".Lbegin%d:\n", counter);
     if (node->cond) {
       gen_expr(node->cond);
-      printf("  pop rax\n");
-      printf("  cmp rax, 0\n");
+      printf("  pop %%rax\n");
+      printf("  cmp $0, %%rax\n");
       printf("  je .Lend%d\n", counter);
     }
     gen_stmt(node->then);
@@ -121,8 +121,8 @@ void gen_stmt(Node *node) {
     int counter = labelCounter++;
     printf(".Lbegin%d:\n", counter);
     gen_expr(node->cond);
-    printf("  pop rax\n");
-    printf("  cmp rax, 0\n");
+    printf("  pop %%rax\n");
+    printf("  cmp $0, %%rax\n");
     printf("  je .Lend%d\n", counter);
     gen_stmt(node->then);
     printf("  jmp .Lbegin%d\n", counter);
@@ -135,9 +135,9 @@ void gen_stmt(Node *node) {
     return;
   case ND_RETURN:
     gen_expr(node->lhs);
-    printf("  pop rax\n");
-    printf("  mov rsp, rbp\n");
-    printf("  pop rbp\n");
+    printf("  pop %%rax\n");
+    printf("  mov %%rbp, %%rsp\n");
+    printf("  pop %%rbp\n");
     printf("  ret\n");
     return;
   case ND_EXPR_STMT:
@@ -163,22 +163,21 @@ void codegen(Function *prog) {
   assign_lvar_offsets(prog);
 
   // アセンブリの前半部分を出力
-  printf(".intel_syntax noprefix\n");
-  printf(".global main\n");
+  printf("  .global main\n");
   printf("main:\n");
 
   // プロローグ
   // 変数26個分の領域を確保する
-  printf("  push rbp\n");
-  printf("  mov rbp, rsp\n");
-  printf("  sub rsp, %d\n", prog->stack_size);
+  printf("  push %%rbp\n");
+  printf("  mov %%rsp, %%rbp\n");
+  printf("  sub $%d, %%rsp\n", prog->stack_size);
 
   // コード生成
   gen_stmt(prog->body);
 
   // エピローグ
   // 最後の式の結果がRAXに残っているのでそれが返り値になる
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
+  printf("  mov %%rbp, %%rsp\n");
+  printf("  pop %%rbp\n");
   printf("  ret\n");
 }
