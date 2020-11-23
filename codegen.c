@@ -54,23 +54,20 @@ void gen_expr(Node *node) {
     printf("  idiv rdi\n");
     break;
   case ND_EQ:
-    printf("  cmp rax, rdi\n");
-    printf("  sete al\n");
-    printf("  movzb rax, al\n");
-    break;
   case ND_NE:
-    printf("  cmp rax, rdi\n");
-    printf("  setne al\n");
-    printf("  movzb rax, al\n");
-    break;
   case ND_LT:
-    printf("  cmp rax, rdi\n");
-    printf("  setl al\n");
-    printf("  movzb rax, al\n");
-    break;
   case ND_LE:
     printf("  cmp rax, rdi\n");
-    printf("  setle al\n");
+
+    if (node->kind == ND_EQ) {
+      printf("  sete al\n");
+    } else if (node->kind == ND_NE) {
+      printf("  setne al\n");
+    } else if (node->kind == ND_LT) {
+      printf("  setl al\n");
+    } else if (node->kind == ND_LE) {
+      printf("  setle al\n");
+    }
     printf("  movzb rax, al\n");
     break;
   }
