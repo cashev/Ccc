@@ -90,10 +90,9 @@ LVar *new_lvar(char *name) {
   locals = var;
 }
 
-
-
 Node *stmt();
 Node *compound_stmt();
+Node *expr_stmt();
 Node *expr();
 Node *assign();
 Node *equality();
@@ -103,12 +102,12 @@ Node *mul();
 Node *unary();
 Node *primary();
 
-// stmt = expr ";"
-//      | "return" expr ";"
+// stmt = return" expr ";"
 //      | "{" compound-stmt
 //      | "if" "(" expr ")" stmt ( "else" stmt)?
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+//      | expr-stmt
 Node *stmt() {
   if (consume("return")) {
     Node *node = calloc(1, sizeof(Node));
@@ -117,10 +116,6 @@ Node *stmt() {
 
     expect(";");
     return node;
-  }
-
-  if (consume("{")) {
-    return compound_stmt();
   }
 
   if (consume("if")) {
@@ -167,9 +162,11 @@ Node *stmt() {
     return node;
   }
 
-  Node *node = expr();
-  expect(";");
-  return node;
+  if (consume("{")) {
+    return compound_stmt();
+  }
+
+  return expr_stmt();
 }
 
 // compound-stmt = stmt* "}"
@@ -187,8 +184,14 @@ Node *compound_stmt() {
   return node;
 }
 
-// expr-stmt = expr ";"
+// expr-stmt = expr? ";"
 Node *expr_stmt() {
+  if (consume(";")) {
+    return new_node(ND_BLOCK);
+  }
+
+  Node *node = new_unary(ND_EXPR_STMT, expr());
+  return node;
 }
 
 // expr = assign
@@ -259,7 +262,7 @@ Node *add() {
       node = new_binary(ND_SUB, node, mul());
       continue;
     }
-    
+
     return node;
   }
 }
@@ -277,7 +280,7 @@ Node *mul() {
       node = new_binary(ND_DIV, node, unary());
       continue;
     }
-    
+
     return node;
   }
 }

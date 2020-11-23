@@ -94,6 +94,9 @@ void gen(Node *node) {
     for (Node *n = node->body; n; n = n->next)
       gen(n);
     return;
+  case ND_EXPR_STMT:
+    gen(node->lhs);
+    return;
   }
 
   gen(node->lhs);
@@ -143,9 +146,7 @@ void gen(Node *node) {
 
 // nを繰り上げ、alignの倍数で最も近い数を返す
 // align_to(5, 8) -> 8, align_to(11, 8)
-int align_to(int n, int align) {
-  return (n + align - 1) / align * align;
-}
+int align_to(int n, int align) { return (n + align - 1) / align * align; }
 
 void assign_lvar_offsets(Function *prog) {
   int offset = 0;
