@@ -120,9 +120,9 @@ Node *stmt() {
 
   if (consume("if")) {
     Node *node = new_node(ND_IF);
-    consume("(");
+    expect("(");
     node->cond = expr();
-    consume(")");
+    expect(")");
     node->then = stmt();
     if (consume("else")) {
       node->els = stmt();
@@ -132,27 +132,27 @@ Node *stmt() {
 
   if (consume("while")) {
     Node *node = new_node(ND_WHILE);
-    consume("(");
+    expect("(");
     node->cond = expr();
-    consume(")");
+    expect(")");
     node->then = stmt();
     return node;
   }
 
   if (consume("for")) {
     Node *node = new_node(ND_FOR);
-    consume("(");
+    expect("(");
     if (!consume(";")) {
       node->init = expr();
-      consume(";");
+      expect(";");
     }
     if (!consume(";")) {
       node->cond = expr();
-      consume(";");
+      expect(";");
     }
     if (!consume(")")) {
       node->inc = expr();
-      consume(")");
+      expect(")");
     }
 
     node->then = stmt();
@@ -187,7 +187,7 @@ Node *expr_stmt() {
   }
 
   Node *node = new_unary(ND_EXPR_STMT, expr());
-  consume(";");
+  expect(";");
   return node;
 }
 
@@ -322,7 +322,7 @@ Node *primary() {
 // program = stmt*
 Function *parse(Token *tok) {
   token = tok;
-  consume("{");
+  expect("{");
 
   Function *prog = calloc(1, sizeof(Function));
   prog->body = compound_stmt();
