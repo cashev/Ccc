@@ -11,36 +11,6 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
-// 次のトークンが期待している記号のときには、トークンを1つ読み進めて
-// 真を返す。それ以外の場合には偽を返す。
-bool consume(char *op) {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len))
-    return false;
-  token = token->next;
-  return true;
-}
-
-// 次のトークンが識別子のときには、トークンを1つ読み進めて
-// 識別子のトークンを返す。それ以外の場合にはNULLを返す
-Token *consume_ident() {
-  if (token->kind != TK_IDENT)
-    return NULL;
-  Token *t = token;
-  token = token->next;
-  return t;
-}
-
-// 次のトークンが数値の場合、トークンを1つ読み進めてその数値を返す。
-// それ以外の場合にはエラーを報告する。
-int expect_number() {
-  if (token->kind != TK_NUM)
-    error_at(token->str, "数ではありません");
-  int val = token->val;
-  token = token->next;
-  return val;
-}
-
 // Tokenが期待している記号のときには、Tokenを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 Token *skip(Token *tok, char *op) {
@@ -110,7 +80,8 @@ Node *primary();
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | expr-stmt
 Node *stmt() {
-  if (consume("return")) {
+  if (equal(token, "return")) {
+    token = token->next;
     Node *node = new_node(ND_RETURN);
     node->lhs = expr();
 
@@ -118,19 +89,22 @@ Node *stmt() {
     return node;
   }
 
-  if (consume("if")) {
+  if (equal(token, "if")) {
+    token = token->next;
     Node *node = new_node(ND_IF);
     token = skip(token, "(");
     node->cond = expr();
     token = skip(token, ")");
     node->then = stmt();
-    if (consume("else")) {
+    if (equal(token, "else")) {
+      token = token->next;
       node->els = stmt();
     }
     return node;
   }
 
-  if (consume("while")) {
+  if (equal(token, "while")) {
+    token = token->next;
     Node *node = new_node(ND_WHILE);
     token = skip(token, "(");
     node->cond = expr();
@@ -139,27 +113,29 @@ Node *stmt() {
     return node;
   }
 
-  if (consume("for")) {
+  if (equal(token, "for")) {
+    token = token->next;
     Node *node = new_node(ND_FOR);
     token = skip(token, "(");
-    if (!consume(";")) {
+    if (!equal(token, ";")) {
       node->init = expr();
-      token = skip(token, ";");
     }
-    if (!consume(";")) {
+    token = skip(token, ";");
+    if (!equal(token, ";")) {
       node->cond = expr();
-      token = skip(token, ";");
     }
-    if (!consume(")")) {
+    token = skip(token, ";");
+    if (!equal(token, ")")) {
       node->inc = expr();
-      token = skip(token, ")");
     }
+    token = skip(token, ")");
 
     node->then = stmt();
     return node;
   }
 
-  if (consume("{")) {
+  if (equal(token, "{")) {
+    token = token->next;
     return compound_stmt();
   }
 
@@ -170,10 +146,11 @@ Node *stmt() {
 Node *compound_stmt() {
   Node head = {};
   Node *cur = &head;
-  while (!consume("}")) {
+  while (!equal(token, "}")) {
     cur->next = stmt();
     cur = cur->next;
   }
+  token = skip(token, "}");
 
   Node *node = new_node(ND_BLOCK);
   node->body = head.next;
@@ -182,7 +159,8 @@ Node *compound_stmt() {
 
 // expr-stmt = expr? ";"
 Node *expr_stmt() {
-  if (consume(";")) {
+  if (equal(token, ";")) {
+    token = token->next;
     return new_node(ND_BLOCK);
   }
 
@@ -197,8 +175,10 @@ Node *expr() { return assign(); }
 // assign = equality ("=" assign)?
 Node *assign() {
   Node *node = equality();
-  if (consume("="))
+  if (equal(token, "=")) {
+    token = token->next;
     node = new_binary(ND_ASSIGN, node, assign());
+  }
   return node;
 }
 
@@ -207,11 +187,13 @@ Node *equality() {
   Node *node = relational();
 
   for (;;) {
-    if (consume("==")) {
+    if (equal(token, "==")) {
+      token = token->next;
       node = new_binary(ND_EQ, node, relational());
       continue;
     }
-    if (consume("!=")) {
+    if (equal(token, "!=")) {
+      token = token->next;
       node = new_binary(ND_NE, node, relational());
       continue;
     }
@@ -225,19 +207,23 @@ Node *relational() {
   Node *node = add();
 
   for (;;) {
-    if (consume("<")) {
+    if (equal(token, "<")) {
+      token = token->next;
       node = new_binary(ND_LT, node, add());
       continue;
     }
-    if (consume("<=")) {
+    if (equal(token, "<=")) {
+      token = token->next;
       node = new_binary(ND_LE, node, add());
       continue;
     }
-    if (consume(">")) {
+    if (equal(token, ">")) {
+      token = token->next;
       node = new_binary(ND_LT, add(), node);
       continue;
     }
-    if (consume(">=")) {
+    if (equal(token, ">=")) {
+      token = token->next;
       node = new_binary(ND_LE, add(), node);
       continue;
     }
@@ -251,11 +237,13 @@ Node *add() {
   Node *node = mul();
 
   for (;;) {
-    if (consume("+")) {
+    if (equal(token, "+")) {
+      token = token->next;
       node = new_binary(ND_ADD, node, mul());
       continue;
     }
-    if (consume("-")) {
+    if (equal(token, "-")) {
+      token = token->next;
       node = new_binary(ND_SUB, node, mul());
       continue;
     }
@@ -269,11 +257,13 @@ Node *mul() {
   Node *node = unary();
 
   for (;;) {
-    if (consume("*")) {
+    if (equal(token, "*")) {
+      token = token->next;
       node = new_binary(ND_MUL, node, unary());
       continue;
     }
-    if (consume("/")) {
+    if (equal(token, "/")) {
+      token = token->next;
       node = new_binary(ND_DIV, node, unary());
       continue;
     }
@@ -285,11 +275,15 @@ Node *mul() {
 // unary = ("+" | "-") unary
 //       | primary
 Node *unary() {
-  if (consume("+"))
+  if (equal(token, "+")) {
+    token = token->next;
     return unary();
+  }
 
-  if (consume("-"))
+  if (equal(token, "-")) {
+    token = token->next;
     return new_binary(ND_SUB, new_node_num(0), unary());
+  }
 
   return primary();
 }
@@ -297,26 +291,32 @@ Node *unary() {
 // primary = num | ident | "(" expr ")"
 Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
-  if (consume("(")) {
+  if (equal(token, "(")) {
+    token = token->next;
     Node *node = expr();
     token = skip(token, ")");
     return node;
   }
 
   // 識別子
-  Token *tok = consume_ident();
-  if (tok) {
-    LVar *lvar = find_lvar(tok);
-    if (!lvar) {
-      lvar = new_lvar(tok->str);
-      lvar->len = tok->len;
+  if (token->kind == TK_IDENT) {
+    LVar *var = find_lvar(token);
+    if (!var) {
+      var = new_lvar(token->str);
+      var->len = token->len;
     }
-    Node *node = new_var_node(lvar);
+    token = token->next;
+    return new_var_node(var);
+  }
+
+  // 数値
+  if (token->kind == TK_NUM) {
+    Node *node = new_node_num(token->val);
+    token = token->next;
     return node;
   }
 
-  // そうでなければ数値のはず
-  return new_node_num(expect_number());
+  error_tok(token, "expected an expression");
 }
 
 // program = stmt*
