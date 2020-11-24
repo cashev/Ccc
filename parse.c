@@ -88,6 +88,7 @@ LVar *new_lvar(char *name) {
   var->name = name;
   var->next = locals;
   locals = var;
+  return var;
 }
 
 Node *stmt();
@@ -191,6 +192,7 @@ Node *expr_stmt() {
   }
 
   Node *node = new_unary(ND_EXPR_STMT, expr());
+  consume(";");
   return node;
 }
 
@@ -325,9 +327,10 @@ Node *primary() {
 // program = stmt*
 Function *parse(Token *tok) {
   token = tok;
+  consume("{");
 
   Function *prog = calloc(1, sizeof(Function));
-  prog->body = stmt();
+  prog->body = compound_stmt();
   prog->locals = locals;
   return prog;
 }

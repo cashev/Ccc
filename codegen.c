@@ -2,57 +2,59 @@
 
 int labelCounter = 0;
 
-void gen_lval(Node *node) {
-  if (node->kind != ND_LVAR)
-    error("代入の左辺値が変数ではありません");
-
-  printf("  mov %%rbp, %%rax\n");
-  printf("  sub $%d, %%rax\n", node->var->offset);
+void push(void) {
   printf("  push %%rax\n");
+}
+
+void pop(char *arg) {
+  printf("  pop %s\n", arg);
+}
+
+void gen_addr(Node *node) {
+  if (node->kind == ND_LVAR) {
+    printf("  lea %d(%%rbp), %%rax\n", node->var->offset);
+    return;
+  }
+  error("not an lvalue");
 }
 
 void gen_expr(Node *node) {
   switch (node->kind) {
   case ND_NUM:
-    printf("  push $%d\n", node->val);
+    printf("  mov $%d, %%rax\n", node->val);
     return;
   case ND_LVAR:
-    gen_lval(node);
-    printf("  pop %%rax\n");
+    gen_addr(node);
     printf("  mov (%%rax), %%rax\n");
-    printf("  push %%rax\n");
     return;
   case ND_ASSIGN:
-    gen_lval(node->lhs);
+    gen_addr(node->lhs);
+    push();
     gen_expr(node->rhs);
-
-    printf("  pop %%rdi\n");
-    printf("  pop %%rax\n");
-    printf("  mov %%rdi, (%%rax)\n");
-    printf("  push %%rdi\n");
+    pop("%rdi");
+    printf("  mov %%rax, (%%rdi)\n");
     return;
   }
 
-  gen_expr(node->lhs);
   gen_expr(node->rhs);
-
-  printf("  pop %%rdi\n");
-  printf("  pop %%rax\n");
+  push();
+  gen_expr(node->lhs);
+  pop("%rdi");
 
   switch (node->kind) {
   case ND_ADD:
     printf("  add %%rdi, %%rax\n");
-    break;
+    return;
   case ND_SUB:
     printf("  sub %%rdi, %%rax\n");
-    break;
+    return;
   case ND_MUL:
     printf("  imul %%rdi, %%rax\n");
-    break;
+    return;
   case ND_DIV:
     printf("  cqo\n");
     printf("  idiv %%rdi\n");
-    break;
+    return;
   case ND_EQ:
   case ND_NE:
   case ND_LT:
@@ -69,62 +71,41 @@ void gen_expr(Node *node) {
       printf("  setle %%al\n");
     }
     printf("  movzb %%al, %%rax\n");
-    break;
+    return;
   }
 
-  printf("  push %%rax\n");
+  error("invalid expression");
 }
 
 void gen_stmt(Node *node) {
   switch (node->kind) {
   case ND_IF: {
     int counter = labelCounter++;
-    if (node->els) {
-      gen_expr(node->cond);
-      printf("  pop %%rax\n");
-      printf("  cmp $0, %%rax\n");
-      printf("  je .L.else.%d\n", counter);
-      gen_stmt(node->then);
-      printf("  jmp .L.end.%d\n", counter);
-      printf(".L.else.%d:\n", counter);
+    gen_expr(node->cond);
+    printf("  cmp $0, %%rax\n");
+    printf("  je  .L.else.%d\n", counter);
+    gen_stmt(node->then);
+    printf("  jmp .L.end.%d\n", counter);
+    printf(".L.else.%d:\n", counter);
+    if (node->els)
       gen_stmt(node->els);
-      printf(".L.end.%d:\n", counter);
-    } else {
-      gen_expr(node->cond);
-      printf("  pop %%rax\n");
-      printf("  cmp $0, %%rax\n");
-      printf("  je .L.end.%d\n", counter);
-      gen_stmt(node->then);
-      printf(".L.end.%d:\n", counter);
-    }
+    printf(".L.end.%d:\n", counter);
     return;
   }
-  case ND_FOR: {
+  case ND_FOR:
+  case ND_WHILE: {
     int counter = labelCounter++;
     if (node->init)
-      gen_stmt(node->init);
+      gen_expr(node->init);
     printf(".L.begin.%d:\n", counter);
     if (node->cond) {
       gen_expr(node->cond);
-      printf("  pop %%rax\n");
       printf("  cmp $0, %%rax\n");
-      printf("  je .L.end.%d\n", counter);
+      printf("  je  .L.end.%d\n", counter);
     }
     gen_stmt(node->then);
     if (node->inc)
       gen_expr(node->inc);
-    printf("  jmp .L.begin.%d\n", counter);
-    printf(".L.end.%d:", counter);
-    return;
-  }
-  case ND_WHILE: {
-    int counter = labelCounter++;
-    printf(".L.begin.%d:\n", counter);
-    gen_expr(node->cond);
-    printf("  pop %%rax\n");
-    printf("  cmp $0, %%rax\n");
-    printf("  je .L.end.%d\n", counter);
-    gen_stmt(node->then);
     printf("  jmp .L.begin.%d\n", counter);
     printf(".L.end.%d:\n", counter);
     return;
@@ -135,15 +116,46 @@ void gen_stmt(Node *node) {
     return;
   case ND_RETURN:
     gen_expr(node->lhs);
-    printf("  pop %%rax\n");
-    printf("  mov %%rbp, %%rsp\n");
-    printf("  pop %%rbp\n");
-    printf("  ret\n");
+    printf("  jmp .L.return\n");
     return;
   case ND_EXPR_STMT:
     gen_expr(node->lhs);
     return;
   }
+
+  switch(node->kind) {
+  case ND_NUM:
+    error("ND_ADD");
+    break;
+  case ND_FOR:
+    error("ND_FOR");
+    break;
+  case ND_BLOCK:
+    error("ND_BLOCK");
+    break;
+  case ND_EXPR_STMT:
+    error("ND_EXPR_STMT");
+    break;
+  case ND_RETURN:
+    error("ND_RETURN");
+    break;
+  case ND_WHILE:
+  case ND_IF:
+    error("stmt");
+    break;
+  case ND_ASSIGN:
+    error("%d", node->rhs->val);
+    error("assign");
+    break;
+  case ND_LVAR:
+    error("var");
+    break;
+  default:
+    error("default");
+    break;
+  }
+  error("error");
+  error("invalid statement");
 }
 
 // nを繰り上げ、alignの倍数で最も近い数を返す
@@ -154,7 +166,7 @@ void assign_lvar_offsets(Function *prog) {
   int offset = 0;
   for (LVar *var = prog->locals; var; var = var->next) {
     offset += 8;
-    var->offset = offset;
+    var->offset = -offset;
   }
   prog->stack_size = align_to(offset, 16);
 }
@@ -163,7 +175,7 @@ void codegen(Function *prog) {
   assign_lvar_offsets(prog);
 
   // アセンブリの前半部分を出力
-  printf("  .global main\n");
+  printf(".globl main\n");
   printf("main:\n");
 
   // プロローグ
@@ -177,6 +189,7 @@ void codegen(Function *prog) {
 
   // エピローグ
   // 最後の式の結果がRAXに残っているのでそれが返り値になる
+  printf(".L.return:\n");
   printf("  mov %%rbp, %%rsp\n");
   printf("  pop %%rbp\n");
   printf("  ret\n");
