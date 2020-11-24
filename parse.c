@@ -31,15 +31,6 @@ Token *consume_ident() {
   return t;
 }
 
-// 次のトークンが期待している記号のときには、トークンを1つ読み進める。
-// それ以外の場合にはエラーを報告する。
-void expect(char *op) {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len))
-    error_at(token->str, "'%c'ではありません", op);
-  token = token->next;
-}
-
 // 次のトークンが数値の場合、トークンを1つ読み進めてその数値を返す。
 // それ以外の場合にはエラーを報告する。
 int expect_number() {
@@ -48,6 +39,15 @@ int expect_number() {
   int val = token->val;
   token = token->next;
   return val;
+}
+
+// Tokenが期待している記号のときには、Tokenを1つ読み進める。
+// それ以外の場合にはエラーを報告する。
+Token *skip(Token *tok, char *op) {
+  if (!equal(tok, op)) {
+    error_tok(tok, "expected '%s'", op);
+  }
+  return token->next;
 }
 
 bool at_eof() { return token->kind == TK_EOF; }
@@ -114,15 +114,15 @@ Node *stmt() {
     Node *node = new_node(ND_RETURN);
     node->lhs = expr();
 
-    expect(";");
+    token = skip(token, ";");
     return node;
   }
 
   if (consume("if")) {
     Node *node = new_node(ND_IF);
-    expect("(");
+    token = skip(token, "(");
     node->cond = expr();
-    expect(")");
+    token = skip(token, ")");
     node->then = stmt();
     if (consume("else")) {
       node->els = stmt();
@@ -132,27 +132,27 @@ Node *stmt() {
 
   if (consume("while")) {
     Node *node = new_node(ND_WHILE);
-    expect("(");
+    token = skip(token, "(");
     node->cond = expr();
-    expect(")");
+    token = skip(token, ")");
     node->then = stmt();
     return node;
   }
 
   if (consume("for")) {
     Node *node = new_node(ND_FOR);
-    expect("(");
+    token = skip(token, "(");
     if (!consume(";")) {
       node->init = expr();
-      expect(";");
+      token = skip(token, ";");
     }
     if (!consume(";")) {
       node->cond = expr();
-      expect(";");
+      token = skip(token, ";");
     }
     if (!consume(")")) {
       node->inc = expr();
-      expect(")");
+      token = skip(token, ")");
     }
 
     node->then = stmt();
@@ -187,7 +187,7 @@ Node *expr_stmt() {
   }
 
   Node *node = new_unary(ND_EXPR_STMT, expr());
-  expect(";");
+  token = skip(token, ";");
   return node;
 }
 
@@ -299,7 +299,7 @@ Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
   if (consume("(")) {
     Node *node = expr();
-    expect(")");
+    token = skip(token, ")");
     return node;
   }
 
@@ -322,7 +322,7 @@ Node *primary() {
 // program = stmt*
 Function *parse(Token *tok) {
   token = tok;
-  expect("{");
+  token = skip(token, "{");
 
   Function *prog = calloc(1, sizeof(Function));
   prog->body = compound_stmt();
