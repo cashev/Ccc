@@ -111,8 +111,7 @@ Node *primary();
 //      | expr-stmt
 Node *stmt() {
   if (consume("return")) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_RETURN;
+    Node *node = new_node(ND_RETURN);
     node->lhs = expr();
 
     expect(";");
@@ -120,8 +119,7 @@ Node *stmt() {
   }
 
   if (consume("if")) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_IF;
+    Node *node = new_node(ND_IF);
     consume("(");
     node->cond = expr();
     consume(")");
@@ -133,8 +131,7 @@ Node *stmt() {
   }
 
   if (consume("while")) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_WHILE;
+    Node *node = new_node(ND_WHILE);
     consume("(");
     node->cond = expr();
     consume(")");
@@ -143,8 +140,7 @@ Node *stmt() {
   }
 
   if (consume("for")) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_FOR;
+    Node *node = new_node(ND_FOR);
     consume("(");
     if (!consume(";")) {
       node->init = expr();
@@ -179,8 +175,7 @@ Node *compound_stmt() {
     cur = cur->next;
   }
 
-  Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_BLOCK;
+  Node *node = new_node(ND_BLOCK);
   node->body = head.next;
   return node;
 }
