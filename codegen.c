@@ -157,7 +157,7 @@ void gen_stmt(Node *node) {
     error("default");
     break;
   }
-  error("error");
+
   error("invalid statement");
 }
 
