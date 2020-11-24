@@ -1,13 +1,16 @@
 #include "Ccc.h"
 
 int labelCounter = 0;
+int depth;
 
 void push(void) {
   printf("  push %%rax\n");
+  depth++;
 }
 
 void pop(char *arg) {
   printf("  pop %s\n", arg);
+  depth--;
 }
 
 void gen_addr(Node *node) {
@@ -186,6 +189,7 @@ void codegen(Function *prog) {
 
   // コード生成
   gen_stmt(prog->body);
+  assert(depth == 0);
 
   // エピローグ
   // 最後の式の結果がRAXに残っているのでそれが返り値になる
