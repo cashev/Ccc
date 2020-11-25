@@ -272,7 +272,7 @@ Node *mul() {
   }
 }
 
-// unary = ("+" | "-") unary
+// unary = ("+" | "-" | "*" | "&") unary
 //       | primary
 Node *unary() {
   if (equal(token, "+")) {
@@ -283,6 +283,16 @@ Node *unary() {
   if (equal(token, "-")) {
     token = token->next;
     return new_binary(ND_SUB, new_node_num(0), unary());
+  }
+
+  if (equal(token, "&")) {
+    token = token->next;
+    return new_unary(ND_ADDR, unary());
+  }
+
+  if (equal(token, "*")) {
+    token = token->next;
+    return new_unary(ND_DEREF, unary());
   }
 
   return primary();

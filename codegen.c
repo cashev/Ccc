@@ -1,5 +1,7 @@
 #include "Ccc.h"
 
+void gen_expr(Node *node);
+
 int labelCounter = 0;
 int depth;
 
@@ -14,8 +16,12 @@ void pop(char *arg) {
 }
 
 void gen_addr(Node *node) {
-  if (node->kind == ND_LVAR) {
+  switch (node->kind) {
+  case ND_LVAR:
     printf("  lea %d(%%rbp), %%rax\n", node->var->offset);
+    return;
+  case ND_DEREF:
+    gen_expr(node->lhs);
     return;
   }
   error("not an lvalue");
@@ -29,6 +35,13 @@ void gen_expr(Node *node) {
   case ND_LVAR:
     gen_addr(node);
     printf("  mov (%%rax), %%rax\n");
+    return;
+  case ND_DEREF:
+    gen_expr(node->lhs);
+    printf("  mov (%%rax), %%rax\n");
+    return;
+  case ND_ADDR:
+    gen_addr(node->lhs);
     return;
   case ND_ASSIGN:
     gen_addr(node->lhs);
