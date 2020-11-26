@@ -139,7 +139,7 @@ void gen_stmt(Node *node) {
     return;
   }
 
-  switch(node->kind) {
+  switch (node->kind) {
   case ND_NUM:
     error("ND_ADD");
     break;

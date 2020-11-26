@@ -232,6 +232,63 @@ Node *relational() {
   }
 }
 
+// '+'は数値だけでなくポインタの演算にも使われる.
+// p+nはポインタに整数値 nを足すのではなく、sizeof(*p)*nを足す.
+Node *new_add(Node *lhs, Node *rhs) {
+  add_type(lhs);
+  add_type(rhs);
+
+  // num + num
+  if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
+    return new_binary(ND_ADD, lhs, rhs);
+  }
+
+  // ptr + prtは許容していない
+  if (lhs->ty->base && rhs->ty->base) {
+    error_tok(token, "invalid operands");
+  }
+
+  // num + ptr は ptr + num へスワップする
+  if (!lhs->ty->base && rhs->ty->base) {
+    Node *tmp = lhs;
+    lhs = rhs;
+    rhs = tmp;
+  }
+
+  // ptr + num
+  rhs = new_binary(ND_MUL, rhs, new_node_num(8));
+  return new_binary(ND_ADD, lhs, rhs);
+}
+
+Node *new_sub(Node *lhs, Node *rhs) {
+  add_type(lhs);
+  add_type(rhs);
+
+  // num - num
+  if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
+    return new_binary(ND_SUB, lhs, rhs);
+  }
+
+  // ptr - num
+  if (lhs->ty->base && is_integer(rhs->ty)) {
+    rhs = new_binary(ND_MUL, rhs, new_node_num(8));
+    add_type(rhs);
+    Node *node = new_binary(ND_SUB, lhs, rhs);
+    node->ty = lhs->ty;
+    return node;
+  }
+
+  // ptr - ptr
+  // ポインタ同士の減算は、間に要素がいくつかあるか計算する
+  if (lhs->ty->base && rhs->ty->base) {
+    Node *node = new_binary(ND_SUB, lhs, rhs);
+    node->ty = ty_int;
+    return new_binary(ND_DIV, node, new_node_num(8));
+  }
+
+  error_tok(token, "invalid operands");
+}
+
 // add = mul ("+" mul | "-" mul)*
 Node *add() {
   Node *node = mul();
@@ -239,12 +296,12 @@ Node *add() {
   for (;;) {
     if (equal(token, "+")) {
       token = token->next;
-      node = new_binary(ND_ADD, node, mul());
+      node = new_add(node, mul());
       continue;
     }
     if (equal(token, "-")) {
       token = token->next;
-      node = new_binary(ND_SUB, node, mul());
+      node = new_sub(node, mul());
       continue;
     }
 

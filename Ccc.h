@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct Type Type;
+
 //
 // tokenize.c
 //
@@ -76,6 +78,8 @@ typedef struct Node Node;
 struct Node {
   NodeKind kind; // ノードの型
 
+  Type *ty; // Type 例: intなど
+
   Node *next; // 次のノード
   Node *lhs;  // 左辺
   Node *rhs;  // 右辺
@@ -101,6 +105,26 @@ struct Function {
   LVar *locals;
   int stack_size;
 };
+
+//
+// type.c
+//
+
+typedef enum {
+  TY_INT,
+  TY_PTR,
+} TypeKind;
+
+struct Type {
+  TypeKind kind;
+  Type *base;
+};
+
+extern Type *ty_int;
+
+bool is_integer(Type *ty);
+void add_type(Node *node);
+
 
 Function *parse(Token *tok);
 
