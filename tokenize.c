@@ -82,6 +82,7 @@ Token *new_token(TokenKind kind, char *start, char *end) {
 
 // 入力文字列をトークナイズしてTokenを返す
 Token *tokenize(char *p) {
+  user_input = p;
   Token head;
   head.next = NULL;
   Token *cur = &head;
