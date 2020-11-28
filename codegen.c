@@ -17,7 +17,7 @@ void pop(char *arg) {
 
 void gen_addr(Node *node) {
   switch (node->kind) {
-  case ND_LVAR:
+  case ND_VAR:
     printf("  lea %d(%%rbp), %%rax\n", node->var->offset);
     return;
   case ND_DEREF:
@@ -32,7 +32,7 @@ void gen_expr(Node *node) {
   case ND_NUM:
     printf("  mov $%d, %%rax\n", node->val);
     return;
-  case ND_LVAR:
+  case ND_VAR:
     gen_addr(node);
     printf("  mov (%%rax), %%rax\n");
     return;
@@ -163,7 +163,7 @@ void gen_stmt(Node *node) {
     error("%d", node->rhs->val);
     error("assign");
     break;
-  case ND_LVAR:
+  case ND_VAR:
     error("var");
     break;
   default:
@@ -180,7 +180,7 @@ int align_to(int n, int align) { return (n + align - 1) / align * align; }
 
 void assign_lvar_offsets(Function *prog) {
   int offset = 0;
-  for (LVar *var = prog->locals; var; var = var->next) {
+  for (Obj *var = prog->locals; var; var = var->next) {
     offset += 8;
     var->offset = -offset;
   }

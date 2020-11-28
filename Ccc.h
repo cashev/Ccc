@@ -27,7 +27,7 @@ struct Token {
   TokenKind kind; // トークンの型
   Token *next;    // 次の入力トークン
   int val;        // kindがTK_NUMの場合、その数値
-  char *str;      // トークン文字列
+  char *loc;      // トークンの位置
   int len;        // トークンの長さ
 };
 
@@ -41,11 +41,11 @@ Token *tokenize(char *p);
 // parse.c
 //
 
-typedef struct LVar LVar;
+typedef struct Obj Obj;
 
 // ローカル変数の型
-struct LVar {
-  LVar *next; // 次の変数かNULL
+struct Obj {
+  Obj *next; // 次の変数かNULL
   char *name; // 変数の名前
   int len;    // 名前の長さ
   int offset; // RBPからのオフセット
@@ -70,7 +70,7 @@ typedef enum {
   ND_FOR,       // "for"
   ND_BLOCK,     // { ... }
   ND_EXPR_STMT, // Expression statement
-  ND_LVAR,      // ローカル変数
+  ND_VAR,      // ローカル変数
   ND_NUM,       // 整数
 } NodeKind;
 
@@ -95,7 +95,7 @@ struct Node {
   // Block
   Node *body;
 
-  LVar *var; // kindがND_LVARの場合のみ使う
+  Obj *var; // kindがND_LVARの場合のみ使う
   int val;   // kindがND_NUMの場合のみ使う
 };
 
@@ -103,7 +103,7 @@ struct Node {
 typedef struct Function Function;
 struct Function {
   Node *body;
-  LVar *locals;
+  Obj *locals;
   int stack_size;
 };
 

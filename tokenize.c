@@ -33,11 +33,11 @@ void error_at(char *loc, char *fmt, ...) {
 void error_tok(Token *tok, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  verror_at(tok->str, fmt, ap);
+  verror_at(tok->loc, fmt, ap);
 }
 
 bool equal(Token *tok, char *op) {
-  return memcmp(tok->str, op, tok->len) == 0 && op[tok->len] == '\0';
+  return memcmp(tok->loc, op, tok->len) == 0 && op[tok->len] == '\0';
 }
 
 bool startwith(char *p, char *q) { return memcmp(p, q, strlen(q)) == 0; }
@@ -75,7 +75,7 @@ void convert_keywords(Token *tok) {
 Token *new_token(TokenKind kind, char *start, char *end) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
-  tok->str = start;
+  tok->loc = start;
   tok->len = end - start;
   return tok;
 }

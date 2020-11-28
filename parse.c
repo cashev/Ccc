@@ -1,12 +1,12 @@
 #include "Ccc.h"
 
-LVar *locals;
+Obj *locals;
 Token *token;
 
 // 変数を名前で検索する。見つからなかった場合はNULLを返す。
-LVar *find_lvar(Token *tok) {
-  for (LVar *var = locals; var; var = var->next)
-    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+Obj *find_lvar(Token *tok) {
+  for (Obj *var = locals; var; var = var->next)
+    if (var->len == tok->len && !memcmp(tok->loc, var->name, var->len))
       return var;
   return NULL;
 }
@@ -14,7 +14,7 @@ LVar *find_lvar(Token *tok) {
 char *get_ident(Token *tok) {
   if (tok->kind != TK_IDENT)
     error_tok(tok, "expected an identifier");
-  return strndup(tok->str, tok->len);
+  return strndup(tok->loc, tok->len);
 }
 
 // Tokenが期待している記号のときには、Tokenを1つ読み進める。
@@ -53,14 +53,14 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *new_var_node(LVar *var) {
-  Node *node = new_node(ND_LVAR);
+Node *new_var_node(Obj *var) {
+  Node *node = new_node(ND_VAR);
   node->var = var;
   return node;
 }
 
-LVar *new_lvar(char *name) {
-  LVar *var = calloc(1, sizeof(LVar));
+Obj *new_lvar(char *name) {
+  Obj *var = calloc(1, sizeof(Obj));
   var->name = name;
   var->next = locals;
   locals = var;
@@ -373,7 +373,7 @@ Node *primary() {
 
   // 識別子
   if (token->kind == TK_IDENT) {
-    LVar *var = find_lvar(token);
+    Obj *var = find_lvar(token);
     if (!var) {
       var = new_lvar(get_ident(token));
       var->len = token->len;
