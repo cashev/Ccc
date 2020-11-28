@@ -11,6 +11,12 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
+char *get_ident(Token *tok) {
+  if (tok->kind != TK_IDENT)
+    error_tok(tok, "expected an identifier");
+  return strndup(tok->str, tok->len);
+}
+
 // Tokenが期待している記号のときには、Tokenを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 Token *skip(Token *tok, char *op) {
@@ -369,7 +375,7 @@ Node *primary() {
   if (token->kind == TK_IDENT) {
     LVar *var = find_lvar(token);
     if (!var) {
-      var = new_lvar(token->str);
+      var = new_lvar(get_ident(token));
       var->len = token->len;
     }
     token = token->next;
