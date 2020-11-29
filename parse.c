@@ -6,7 +6,7 @@ Token *token;
 // 変数を名前で検索する。見つからなかった場合はNULLを返す。
 Obj *find_lvar(Token *tok) {
   for (Obj *var = locals; var; var = var->next)
-    if (var->len == tok->len && !memcmp(tok->loc, var->name, var->len))
+    if (strlen(var->name) == tok->len && !memcmp(tok->loc, var->name, var->len))
       return var;
   return NULL;
 }
@@ -24,6 +24,14 @@ Token *skip(Token *tok, char *op) {
     error_tok(tok, "expected '%s'", op);
   }
   return token->next;
+}
+
+bool consume(Token *tok, char *str) {
+  if(equal(tok, str)) {
+    token = tok->next;
+    return true;
+  }
+  return false;
 }
 
 bool at_eof() { return token->kind == TK_EOF; }
@@ -59,14 +67,16 @@ Node *new_var_node(Obj *var) {
   return node;
 }
 
-Obj *new_lvar(char *name) {
+Obj *new_lvar(char *name, Type *ty) {
   Obj *var = calloc(1, sizeof(Obj));
   var->name = name;
+  var->ty = ty;
   var->next = locals;
   locals = var;
   return var;
 }
 
+Node *declaration();
 Node *stmt();
 Node *compound_stmt();
 Node *expr_stmt();
@@ -78,6 +88,63 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
+
+// declspec = "int"
+Type *declspec() {
+  token = skip(token, "int");
+  return ty_int;
+}
+
+// declarator = "*"* ident
+Type *declarator(Type *ty) {
+  while (consume(token, "*")) {
+    ty = pointer_to(ty);
+  }
+  if (token->kind != TK_IDENT) {
+    error_tok(token, "expected a variable name");
+  }
+
+  ty->name = token;
+  token = token->next;
+  return ty;
+}
+
+// declaration = declspec (declarator ("=" expr)? ("," declarator ("=" expr)?)*)? ";"
+Node *declaration() {
+  Type *basety = declspec();
+
+  Node head = {};
+  Node *cur = &head;
+  int i = 0;
+
+  while (!equal(token, ";")) {
+    if (i++ > 0) {
+      token = skip(token, ",");
+    }
+
+    Type *ty = declarator(basety);
+    Obj *var = new_lvar(get_ident(ty->name), ty);
+    // Obj *var = new_lvar(get_ident(token), ty);
+    // Obj *var = new_lvar(token->loc, ty);
+    var->len = token->len;
+
+    if (!equal(token, "=")) {
+      continue;
+    }
+    token = skip(token, "=");
+
+    Node *lhs = new_var_node(var);
+    Node *rhs = assign();
+    Node *node = new_binary(ND_ASSIGN, lhs, rhs);
+    cur->next = new_unary(ND_EXPR_STMT, node);
+    cur = cur->next;
+  }
+
+  Node *node = new_node(ND_BLOCK);
+  node->body = head.next;
+  token = token->next;
+  return node;
+}
 
 // stmt = return" expr ";"
 //      | "{" compound-stmt
@@ -148,13 +215,18 @@ Node *stmt() {
   return expr_stmt();
 }
 
-// compound-stmt = stmt* "}"
+// compound-stmt = (declaration | stmt)* "}"
 Node *compound_stmt() {
   Node head = {};
   Node *cur = &head;
   while (!equal(token, "}")) {
-    cur->next = stmt();
-    cur = cur->next;
+    if (equal(token, "int")) {
+      cur->next = declaration();
+      cur = cur->next;
+    } else {
+      cur->next = stmt();
+      cur = cur->next;
+    }
   }
   token = skip(token, "}");
 
@@ -375,8 +447,7 @@ Node *primary() {
   if (token->kind == TK_IDENT) {
     Obj *var = find_lvar(token);
     if (!var) {
-      var = new_lvar(get_ident(token));
-      var->len = token->len;
+      error_tok(token, "undefined variable");
     }
     token = token->next;
     return new_var_node(var);

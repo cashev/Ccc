@@ -47,6 +47,7 @@ typedef struct Obj Obj;
 struct Obj {
   Obj *next; // 次の変数かNULL
   char *name; // 変数の名前
+  Type *ty;   // 変数の型
   int len;    // 名前の長さ
   int offset; // RBPからのオフセット
 };
@@ -118,12 +119,18 @@ typedef enum {
 
 struct Type {
   TypeKind kind;
+
+  // Pointer
   Type *base;
+
+  // Declaration 宣言
+  Token *name;
 };
 
 extern Type *ty_int;
 
 bool is_integer(Type *ty);
+Type *pointer_to(Type *base);
 void add_type(Node *node);
 
 

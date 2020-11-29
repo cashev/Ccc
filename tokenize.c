@@ -57,7 +57,7 @@ int read_punct(char *p) {
 }
 
 bool is_keyword(Token *tok) {
-  char *kw[] = {"return", "if", "else", "for", "while"};
+  char *kw[] = {"return", "if", "else", "for", "while", "int"};
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
     if (equal(tok, kw[i]))
