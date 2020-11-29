@@ -32,6 +32,10 @@ void gen_expr(Node *node) {
   case ND_NUM:
     printf("  mov $%d, %%rax\n", node->val);
     return;
+  case ND_NEG:
+    gen_expr(node->lhs);
+    printf("  neg %%rax\n");
+    return;
   case ND_VAR:
     gen_addr(node);
     printf("  mov (%%rax), %%rax\n");

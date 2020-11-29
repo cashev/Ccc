@@ -417,7 +417,7 @@ Node *unary() {
 
   if (equal(token, "-")) {
     token = token->next;
-    return new_binary(ND_SUB, new_node_num(0), unary());
+    return new_unary(ND_NEG, unary());
   }
 
   if (equal(token, "&")) {
