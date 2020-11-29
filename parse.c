@@ -433,7 +433,8 @@ Node *unary() {
   return primary();
 }
 
-// primary = num | ident | "(" expr ")"
+// primary = num | ident args? | "(" expr ")"
+// args = "(" ")"
 Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
   if (equal(token, "(")) {
@@ -443,8 +444,18 @@ Node *primary() {
     return node;
   }
 
-  // 識別子
   if (token->kind == TK_IDENT) {
+    // 関数呼び出し
+    if (equal(token->next, "(")) {
+      Node *node = new_node(ND_FUNCALL);
+      node->funcname = strndup(token->loc, token->len);
+      token = token->next;
+      token = skip(token, "(");
+      token = skip(token, ")");
+      return node;
+    }
+
+    // 変数
     Obj *var = find_lvar(token);
     if (!var) {
       error_tok(token, "undefined variable");
