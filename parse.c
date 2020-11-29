@@ -55,7 +55,7 @@ Node *new_unary(NodeKind kind, Node *expr) {
   return node;
 }
 
-Node *new_node_num(int val) {
+Node *new_num_node(int val) {
   Node *node = new_node(ND_NUM);
   node->val = val;
   return node;
@@ -334,7 +334,7 @@ Node *new_add(Node *lhs, Node *rhs) {
   }
 
   // ptr + num
-  rhs = new_binary(ND_MUL, rhs, new_node_num(8));
+  rhs = new_binary(ND_MUL, rhs, new_num_node(8));
   return new_binary(ND_ADD, lhs, rhs);
 }
 
@@ -349,7 +349,7 @@ Node *new_sub(Node *lhs, Node *rhs) {
 
   // ptr - num
   if (lhs->ty->base && is_integer(rhs->ty)) {
-    rhs = new_binary(ND_MUL, rhs, new_node_num(8));
+    rhs = new_binary(ND_MUL, rhs, new_num_node(8));
     add_type(rhs);
     Node *node = new_binary(ND_SUB, lhs, rhs);
     node->ty = lhs->ty;
@@ -361,7 +361,7 @@ Node *new_sub(Node *lhs, Node *rhs) {
   if (lhs->ty->base && rhs->ty->base) {
     Node *node = new_binary(ND_SUB, lhs, rhs);
     node->ty = ty_int;
-    return new_binary(ND_DIV, node, new_node_num(8));
+    return new_binary(ND_DIV, node, new_num_node(8));
   }
 
   error_tok(token, "invalid operands");
@@ -466,7 +466,7 @@ Node *primary() {
 
   // 数値
   if (token->kind == TK_NUM) {
-    Node *node = new_node_num(token->val);
+    Node *node = new_num_node(token->val);
     token = token->next;
     return node;
   }
